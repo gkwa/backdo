@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 )
 
 type Match struct {
@@ -68,6 +69,69 @@ func RunTest(dirPath1, dirPath2 string, excludeExisting []string) error {
 				fmt.Printf("  RHS: %s\n", rhs)
 			}
 		}
+	}
+
+	return nil
+}
+
+func GenerateScript(dirPath1, dirPath2 string, excludeExisting []string) error {
+	// Generate lists of files from directory paths
+	list1 := generateFileList(dirPath1)
+	list2 := generateFileList(dirPath2)
+
+	// Apply substring filters to existing directory paths
+	list2 = applySubstringFilters(list2, excludeExisting)
+
+	// Create a map for faster lookup
+	list2Map := make(map[string]bool)
+	for _, path := range list2 {
+		list2Map[path] = true
+	}
+
+	// Create a list of matches
+	var matches []Match
+
+	// Loop over list 1
+	for _, path1 := range list1 {
+		baseName1 := filepath.Base(path1)
+		var rhs []string
+
+		// Loop over list 2 to find matches
+		for _, path2 := range list2 {
+			baseName2 := filepath.Base(path2)
+			if strings.EqualFold(baseName1, baseName2) {
+				rhs = append(rhs, path2)
+			}
+		}
+
+		// Append to matches if there are any matches
+		if len(rhs) > 0 {
+			matches = append(matches, Match{
+				Path: path1,
+				RHS:  rhs,
+			})
+		}
+	}
+
+	// Define the bash CLI template
+	const scriptTemplate = `#!/bin/bash
+set -x
+set -e
+
+{{range .}}
+mv "{{.Path}}" "{{index .RHS 0}}"{{end}}
+`
+
+	// Parse the template
+	tmpl, err := template.New("script").Parse(scriptTemplate)
+	if err != nil {
+		return fmt.Errorf("error parsing template: %v", err)
+	}
+
+	// Execute the template
+	err = tmpl.Execute(os.Stdout, matches)
+	if err != nil {
+		return fmt.Errorf("error executing template: %v", err)
 	}
 
 	return nil

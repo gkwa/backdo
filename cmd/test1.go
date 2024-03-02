@@ -11,6 +11,7 @@ var (
 	dirPath1        string
 	dirPath2        string
 	excludeExisting []string
+	script          bool
 )
 
 // test1Cmd represents the test1 command
@@ -27,9 +28,16 @@ to quickly create a Cobra application.`,
 		if dirPath1 == "" || dirPath2 == "" {
 			return fmt.Errorf("both directory paths (--incoming and --existing) are required")
 		}
-		err := test1.RunTest(dirPath1, dirPath2, excludeExisting)
-		if err != nil {
-			return err
+		if script {
+			err := test1.GenerateScript(dirPath1, dirPath2, excludeExisting)
+			if err != nil {
+				return err
+			}
+		} else {
+			err := test1.RunTest(dirPath1, dirPath2, excludeExisting)
+			if err != nil {
+				return err
+			}
 		}
 		return nil
 	},
@@ -41,4 +49,5 @@ func init() {
 	test1Cmd.Flags().StringVar(&dirPath1, "incoming", "", "First directory path")
 	test1Cmd.Flags().StringVar(&dirPath2, "existing", "", "Second directory path")
 	test1Cmd.Flags().StringSliceVar(&excludeExisting, "exclude-existing", nil, "List of substrings to exclude from existing directory paths")
+	test1Cmd.Flags().BoolVar(&script, "script", false, "Generate bash CLI commands")
 }

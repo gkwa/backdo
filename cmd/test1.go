@@ -46,8 +46,8 @@ to quickly create a Cobra application.`,
 func init() {
 	rootCmd.AddCommand(test1Cmd)
 
-	test1Cmd.Flags().StringVar(&dirPath1, "incoming", "", "First directory path")
-	test1Cmd.Flags().StringVar(&dirPath2, "existing", "", "Second directory path")
+	test1Cmd.Flags().StringVar(&dirPath1, "incoming", "", "Incoming directory path.  The new files.")
+	test1Cmd.Flags().StringVar(&dirPath2, "existing", "", "Existing directory path.  The existing files.")
 	test1Cmd.Flags().StringSliceVar(&excludeExisting, "exclude-existing", nil, "List of substrings to exclude from existing directory paths")
 	test1Cmd.Flags().BoolVar(&script, "script", false, "Generate bash CLI commands")
 }
